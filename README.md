@@ -14,6 +14,6 @@ These same parameters are used to generate SN parameters for a given host. Photo
 
 # SN Datasets
 The software has been trained using the following datasets:
-- SNLS ([Guy et al. (2010) (http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?2010A%26A...523A...7G&db_key=AST&nosetcookie=1), [Sullivan et al. (2010)] (http://cdsads.u-strasbg.fr/abs/2011yCat..74060782S); 277 SNe Ia with SALT2 params, 231 with host params) [to be added]
+- SNLS ([Guy et al. (2010)] (http://cdsads.u-strasbg.fr/cgi-bin/nph-bib_query?2010A%26A...523A...7G&db_key=AST&nosetcookie=1), [Sullivan et al. (2010)] (http://cdsads.u-strasbg.fr/abs/2011yCat..74060782S); 277 SNe Ia with SALT2 params, 231 with host params) [to be added]
 - SDSS ([Sako et al. (2104)] (http://arxiv.org/abs/1401.3317); ~1400 SNe Ia) [to be added]
 - DES (???) [to be added]
