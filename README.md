@@ -7,5 +7,5 @@ The code currently supports the generation of SALT2 parameters (stretch, color, 
 # SN Datasets
 The software has been trained using the following datasets:
 - SNLS ([REF], number of SNe) [in progress]
-- SDSS ([REF], number of SNe) [in progress]
+- SDSS ([Sako et al. (2104)] (http://arxiv.org/abs/1401.3317), number of SNe) [in progress]
 - DES (number of SNe) [in progress]
