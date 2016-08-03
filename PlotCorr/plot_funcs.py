@@ -334,7 +334,7 @@ def plot_loc_color(list1,list2):
 	axarr[16,0].set_ylim(-6,6)
 	axarr[17,0].set_ylim(-6,6)
 	axarr[18,0].set_ylim(-1,1)
-	axarr[19,0].set_ylim(-1,1)
+	axarr[19,0].set_ylim(-2,2)
 
 
 	plt.show()
