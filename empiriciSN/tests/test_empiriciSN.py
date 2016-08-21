@@ -1,7 +1,6 @@
 """
 Test code for empiriciSN class.
 """
-import os
 import unittest
 import numpy as np
 from empiriciSN import empiriciSN
