@@ -14,6 +14,12 @@ class empiriciSNTestCase(unittest.TestCase):
         """
         self.empiriciSN=empiriciSN(model_file = '../../models/empiriciSN_model_7comp.fit')
         self.files=[]
+    
+    def test_GetSN(self):
+        sample = self.empiriciSN.XDGMM.sample()[0]
+        testdat=np.append(np.array([np.nan,np.nan,np.nan]),sample[3:])
+        sn = self.empiriciSN.get_SN(testdat)
+        self.assertEqual(sn.shape,(1,3))
 
 if __name__ == '__main__':
     unittest.main()
