@@ -1,3 +1,7 @@
 numpy
 nose
+scikit-learn
+astroML_addons
+astroML
+scipy
 git+git://github.com/tholoien/XDGMM.git#egg=xdgmm
