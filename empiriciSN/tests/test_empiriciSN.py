@@ -11,7 +11,7 @@ class empiriciSNTestCase(unittest.TestCase):
         """
         Set up each test with a new empiriciSN object with existing model.
         """
-        self.empiriciSN=empiriciSN(model_file = '../../models/empiriciSN_model_7comp.fit')
+        self.empiriciSN=empiriciSN(model_file = 'empiriciSN_model_7comp.fit')
         self.files=[]
     
     def test_GetSN(self):
