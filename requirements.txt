@@ -4,4 +4,3 @@ scikit-learn
 astroML_addons
 astroML
 scipy
-urllib
