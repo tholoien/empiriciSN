@@ -18,17 +18,21 @@ class empiriciSN():
 
     Parameters
     ----------
-    model: string (optional)
+    model_file: string (optional)
         Name of text file containing model being used (default=None).
+    fit_method: string (optional)
+        Name of XD fitting method to use (default='astroML'). Must be
+        either 'astroML' or 'Bovy'.
 
     Notes
     -----
     The class can be initialized with a model or one can be loaded or
         fit to data.
     """
-    def __init__(self, model_file=None):
+    def __init__(self, model_file=None, fit_method = 'astroML'):
         
-        self.XDGMM = XDGMM(n_components = 7)
+        self.XDGMM = XDGMM(n_components = 7, method = fit_method)
+        self.fit_method = fit_method
         
         if model_file is not None:
             self.read_model(model_file)
@@ -38,6 +42,9 @@ class empiriciSN():
         
         Conditions the XDGMM model based on the data in X and returns
             SN parameters sampled from the conditioned model.
+            
+        This assumes that the first three parameters used when fitting 
+            the model are the SN parameters.
 
         Parameters
         ----------
@@ -61,14 +68,41 @@ class empiriciSN():
         else: cond_XDGMM = self.XDGMM.condition(X, Xerr)
         
         return cond_XDGMM.sample(n_SN)
-    
-    def fit_model(self, filelist, filename='empiriciSN_model.fit',
-                  n_components=7, method='astroML'):
+
+    def fit_model(self, X, Xerr, filename='empiriciSN_model.fit',
+                  n_components=7):
         """Fit the XD model to data
         
         The specified method and n_components Gaussian components will
             be used (the optimal number of components was determined 
-            using BIC to be 6 or 7).
+            using BIC to be 6 or 7). The fit will be saved in the file
+            with name defined by the filename variable.
+
+        Parameters
+        ----------
+        X: array_like, shape = (n_samples, n_features)
+            Input data.
+        Xerr: array_like, shape = (n_samples, n_features, n_features)
+            Error on input data.
+        filename: string (optional)
+            Filename for model fit (default = 'empiriciSN_model.fit').
+        n_components: float (optional)
+            Number of Gaussian components to use (default = 7)
+        """
+        self.XDGMM.n_components = n_components
+        self.XDGMM = self.XDGMM.fit(X, Xerr)
+        self.XDGMM.save_model(filename)
+        self.model_file = filename
+
+    def fit_from_files(self, filelist, filename='empiriciSN_model.fit',
+                  n_components=7, method='astroML'):
+        """Fit the XD model to data contained in files.
+        
+        Fit the model using data contained in the files listed in the
+            filelist variable. This assumes that the data files are in
+            the same format as those provided with this code and that 
+            only redshift, distance from host nucleus, host colors, and
+            local host surface brightness are being used for the fit.
 
         Parameters
         ----------
@@ -83,14 +117,11 @@ class empiriciSN():
             XD fitting method to use (default = 'astroML')
         """
         X, Xerr = self.get_data(filelist)
-        self.XDGMM.n_components = n_components
-        self.XDGMM.method = method
-        self.XDGMM = self.XDGMM.fit(X, Xerr)
-        self.XDGMM.save_model(filename)
-        self.model_file = filename
+        self.fit_model(X, Xerr, filename=filename, 
+                       n_components=n_components, method=method)
     
     def read_model(self, filename):
-        """Read the parameters of the model from a file
+        """Read the parameters of the model from a file.
         
         Read the parameters of a model from a file and store it in the 
             self.XDGMM object. The model filename is stored in 
@@ -103,9 +134,128 @@ class empiriciSN():
         """
         self.XDGMM.read_model(filename)
         self.model_file = filename
-    
+
+    def component_test(self, X, Xerr, component_range):
+        """Test the performance of the model for a range of numbers of 
+        Gaussian components.
+        
+        Uses the XDGMM.bic_test method to compute the BIC score for 
+            each n_components in the component_range array.
+        
+        Parameters
+        ----------
+        X: array_like, shape = (n_samples, n_features)
+            Input data.
+        Xerr: array_like, shape = (n_samples, n_features, n_features)
+            Error on input data.
+        component_range: array_like
+            Range of n_components to test.
+        
+        Returns
+        -------
+        bics: array_like, shape = (len(param_range),)
+            BIC for each value of n_components
+        optimal_n_comp: float
+            Number of components with lowest BIC score
+        lowest_bic: float
+            Lowest BIC from the scores computed.
+        """
+        bics, optimal_n_comp, lowest_bic = \
+            self.XDGMM.bic_test(X, Xerr, component_range)
+        return bics, optimal_n_comp, lowest_bic
+
+    def get_logR(self,cond_indeces, R_index, X, Xerr=None):
+        """Use a subset of parameters in given data to condition the 
+        model and return a sample value for log(R/Re).
+        
+        The fit_params array specifies a list of indeces to use to
+            condition the model. The model will be conditioned and then
+            a radius will be drawn from the conditioned model.
+        
+        This is so that the radius can then be used to calculate local
+            surface brightness to fully condition the model to sample
+            likely SN parameters.
+        
+        This does not make assumptions about what parameters are being
+            used in the model, but does assume that the model has been
+            fit already and that the first three parameters in the data 
+            that were used to fit the model are the SN parameters.
+        
+        Parameters
+        ----------
+        cond_indeces: array_like
+            Array of indeces indicating which parameters to use to
+            condition the model. Cannot contain [0, 1, 2] since these
+            are SN parameters.
+        R_index: int
+            Index of log(R/Re) in the list of parameters that were used
+            to fit the model.
+        X: array_like, shape = (n < n_features,)
+            Input data.
+        Xerr: array_like, shape = (X.shape,) (optional)
+            Error on input data. If none, no error used to condition.
+            
+        Returns
+        -------
+        logR: float
+            Sample value of log(R/Re) taken from the conditioned model.
+        """
+        if self.model_file is None: 
+            raise StandardError("Model parameters not set.")
+        
+        if 0 in cond_indeces or 1 in cond_indeces or 2 in cond_indeces:
+            raise ValueError("Cannot condition model on SN parameters.")
+        if R_index in cond_indeces:
+            raise ValueError("Cannot condition model on log(R/Re).")
+        
+        cond_data = np.array([])
+        if Xerr is not None: cond_err = np.array([])
+        R_cond_idx = R_index
+        n_features = self.XDGMM.mu.shape[1]
+        j = 0
+        
+        for i in range(n_features):
+            if i in cond_indeces:
+                cond_data = np.append(cond_data,X[j])
+                if Xerr is not None: np.append(cond_err, Xerr[j])
+                j += 1
+                if i < R_index: R_cond_idx -= 1
+            else:
+                cond_data = np.append(cond_data,np.nan)
+                if Xerr is not None: np.append(cond_err, 0.0)
+        
+        if Xerr is not None: 
+            cond_XDGMM = self.XDGMM.condition(cond_data, cond_err)
+        else: cond_XDGMM = self.XDGMM.condition(cond_data)
+        
+        sample = cond_XDGMM.sample()
+        logR = sample[0][R_cond_idx]
+        return logR
+
+    def set_fit_method(self, fit_method):
+        """Set the XD fitting method
+        
+        Changes the fitting method of self.XDGMM to the one specified
+            in fit_method.
+        
+        Parameters
+        ----------
+        fit_method: string
+            Name of fitting method to use. Must be either 'astroML' or 
+            'Bovy'.
+        """
+        if fit_method == 'astroML': n_iter = 100
+        elif fit_method == 'Bovy': n_iter = 10**9
+        else:
+            raise ValueError("Method must be either 'astroML' or 'Bovy'")
+        
+        self.XDGMM.method = fit_method
+        self.XDGMM.n_iter = n_iter
+        self.fit_method = fit_method
+        
+
     def get_data(self, filelist):
-        """Parse SN and host data from a list of data files
+        """Parse SN and host data from a list of data files.
         
         Reads in each data file and returns an array of data and a 
             matrix of errors, which can be used to fit the XDGMM model.
@@ -128,37 +278,41 @@ class empiriciSN():
             locations of the SN in each filter.
         Xerr: array_like, shape = (n_samples, n_features, n_features)
             Error on output data.
+        profiles: array_list, shape = (n_samples,)
+            Surface brightness profile ('Exp' for exponential, 'deV' for
+            de Vaucouleurs) of each host in the sample. Used for radius
+            fitting and local surface brightness calculation.
         """
-        x0=[]
-        x0_err=[]
-        x1=[]
-        x1_err=[]
-        c=[]
-        c_err=[]
-        z=[]
-        z_err=[]
-        logr=[]
-        logr_err=[]
-        umag=[]
-        umag_err=[]
-        gmag=[]
-        gmag_err=[]
-        rmag=[]
-        rmag_err=[]
-        imag=[]
-        imag_err=[]
-        zmag=[]
-        zmag_err=[]
-        SB_u=[]
-        SB_u_err=[]
-        SB_g=[]
-        SB_g_err=[]
-        SB_r=[]
-        SB_r_err=[]
-        SB_i=[]
-        SB_i_err=[]
-        SB_z=[]
-        SB_z_err=[]
+        x0=np.array([])
+        x0_err=np.array([])
+        x1=np.array([])
+        x1_err=np.array([])
+        c=np.array([])
+        c_err=np.array([])
+        z=np.array([])
+        z_err=np.array([])
+        logr=np.array([])
+        logr_err=np.array([])
+        umag=np.array([])
+        umag_err=np.array([])
+        gmag=np.array([])
+        gmag_err=np.array([])
+        rmag=np.array([])
+        rmag_err=np.array([])
+        imag=np.array([])
+        imag_err=np.array([])
+        zmag=np.array([])
+        zmag_err=np.array([])
+        SB_u=np.array([])
+        SB_u_err=np.array([])
+        SB_g=np.array([])
+        SB_g_err=np.array([])
+        SB_r=np.array([])
+        SB_r_err=np.array([])
+        SB_i=np.array([])
+        SB_i_err=np.array([])
+        SB_z=np.array([])
+        SB_z_err=np.array([])
         
         for filename in filelist:
             infile=open(filename,'r')
@@ -172,69 +326,38 @@ class empiriciSN():
                     or line[51]=='nan' or line[57]=='nan': continue
                 
                 # SN params
-                x0.append(float(line[7])) #x0
-                x0_err.append(float(line[8]))
-                x1.append(float(line[9]))  # x1
-                x1_err.append(float(line[10]))
-                c.append(float(line[11]))  # c
-                c_err.append(float(line[12]))
+                x0 = np.append(x0,float(line[7])) #x0
+                x0_err = np.append(x0_err,float(line[8]))
+                x1 = np.append(x1,float(line[9]))  # x1
+                x1_err = np.append(x1_err,float(line[10]))
+                c = np.append(c,float(line[11]))  # c
+                c_err = np.append(c_err,float(line[12]))
                 
                 # Host params
-                z.append(float(line[4]))
-                z_err.append(0.0)
-                logr.append(np.log10(float(line[15])/float(line[42]))) # r
-                logr_err.append(float(line[43])/(float(line[42])*np.log(10)))
-                umag.append(float(line[18]))  # u_mag
-                umag_err.append(float(line[19]))
-                gmag.append(float(line[20]))  # g_mag
-                gmag_err.append(float(line[21]))
-                rmag.append(float(line[22]))  # r_mag
-                rmag_err.append(float(line[23]))
-                imag.append(float(line[24]))  # i_mag
-                imag_err.append(float(line[25]))
-                zmag.append(float(line[26]))  # z_mag
-                zmag_err.append(float(line[27]))
-                SB_u.append(float(line[32]))  # SB_u
-                SB_u_err.append(float(line[33]))
-                SB_g.append(float(line[38]))  # SB_g
-                SB_g_err.append(float(line[39]))
-                SB_r.append(float(line[44]))  # SB_r
-                SB_r_err.append(float(line[45]))
-                SB_i.append(float(line[50]))  # SB_i
-                SB_i_err.append(float(line[52]))
-                SB_z.append(float(line[56]))  # SB_z
-                SB_z_err.append(float(line[57]))
-        
-        x0=np.array(x0)
-        x0_err=np.array(x0_err)
-        x1=np.array(x1)
-        x1_err=np.array(x1_err)
-        c=np.array(c)
-        c_err=np.array(c_err)
-        z=np.array(z)
-        z_err=np.array(z_err)
-        logr=np.array(logr)
-        logr_err=np.array(logr_err)
-        umag=np.array(umag)
-        umag_err=np.array(umag_err)
-        gmag=np.array(gmag)
-        gmag_err=np.array(gmag_err)
-        rmag=np.array(rmag)
-        rmag_err=np.array(rmag_err)
-        imag=np.array(imag)
-        imag_err=np.array(imag_err)
-        zmag=np.array(zmag)
-        zmag_err=np.array(zmag_err)
-        SB_u=np.array(SB_u)
-        SB_u_err=np.array(SB_u_err)
-        SB_g=np.array(SB_g)
-        SB_g_err=np.array(SB_g_err)
-        SB_r=np.array(SB_r)
-        SB_r_err=np.array(SB_r_err)
-        SB_i=np.array(SB_i)
-        SB_i_err=np.array(SB_i_err)
-        SB_z=np.array(SB_z)
-        SB_z_err=np.array(SB_z_err)
+                z = np.append(z,float(line[4]))
+                z_err = np.append(z_err,0.0)
+                logr = np.append(logr,np.log10(float(line[15])/float(line[42]))) # r
+                logr_err = np.append(logr_err,float(line[43])/(float(line[42])*np.log(10)))
+                umag = np.append(umag,float(line[18]))  # u_mag
+                umag_err = np.append(umag_err,float(line[19]))
+                gmag = np.append(gmag,float(line[20]))  # g_mag
+                gmag_err = np.append(gmag_err,float(line[21]))
+                rmag = np.append(rmag,float(line[22]))  # r_mag
+                rmag_err = np.append(rmag_err,float(line[23]))
+                imag = np.append(imag,float(line[24]))  # i_mag
+                imag_err = np.append(imag_err,float(line[25]))
+                zmag = np.append(zmag,float(line[26]))  # z_mag
+                zmag_err = np.append(zmag_err,float(line[27]))
+                SB_u = np.append(SB_u,float(line[32]))  # SB_u
+                SB_u_err = np.append(SB_u_err,float(line[33]))
+                SB_g = np.append(SB_g,float(line[38]))  # SB_g
+                SB_g_err = np.append(SB_g_err,float(line[39]))
+                SB_r = np.append(SB_r,float(line[44]))  # SB_r
+                SB_r_err = np.append(SB_r_err,float(line[45]))
+                SB_i = np.append(SB_i,float(line[50]))  # SB_i
+                SB_i_err = np.append(SB_i_err,float(line[52]))
+                SB_z = np.append(SB_z,float(line[56]))  # SB_z
+                SB_z_err = np.append(SB_z_err,float(line[57]))
         
         ug = umag-gmag
         ug_err = np.sqrt(umag_err**2+gmag_err**2)
