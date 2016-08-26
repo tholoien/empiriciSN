@@ -95,7 +95,7 @@ class empiriciSN():
         self.model_file = filename
 
     def fit_from_files(self, filelist, filename='empiriciSN_model.fit',
-                  n_components=7, method='astroML'):
+                  n_components=7):
         """Fit the XD model to data contained in files.
         
         Fit the model using data contained in the files listed in the
@@ -118,7 +118,7 @@ class empiriciSN():
         """
         X, Xerr = self.get_data(filelist)
         self.fit_model(X, Xerr, filename=filename, 
-                       n_components=n_components, method=method)
+                       n_components=n_components)
     
     def read_model(self, filename):
         """Read the parameters of the model from a file.
@@ -135,7 +135,7 @@ class empiriciSN():
         self.XDGMM.read_model(filename)
         self.model_file = filename
 
-    def component_test(self, X, Xerr, component_range):
+    def component_test(self, X, Xerr, component_range, no_err=False):
         """Test the performance of the model for a range of numbers of 
         Gaussian components.
         
@@ -150,6 +150,9 @@ class empiriciSN():
             Error on input data.
         component_range: array_like
             Range of n_components to test.
+        no_err: bool (optional)
+            Flag for whether to calculate the BIC with the errors 
+            included or not. (default = False)
         
         Returns
         -------
@@ -161,7 +164,7 @@ class empiriciSN():
             Lowest BIC from the scores computed.
         """
         bics, optimal_n_comp, lowest_bic = \
-            self.XDGMM.bic_test(X, Xerr, component_range)
+            self.XDGMM.bic_test(X, Xerr, component_range, no_err)
         return bics, optimal_n_comp, lowest_bic
 
     def get_logR(self,cond_indeces, R_index, X, Xerr=None):
