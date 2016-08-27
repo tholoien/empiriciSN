@@ -21,7 +21,11 @@ install:
   - pip install -r requirements.txt
   - pip install git+git://github.com/tholoien/XDGMM.git#egg=xdgmm
   - python setup.py install
-  # We need nbconvert to run the notebooks
+  # We need nbconvert to run the notebooks - and notebooks need latex
+  - sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+  - sudo apt-get install chktex
+  # OK, now get jupyter and nbconvert (so we can run the notebook
+  # from the command line)
   - pip install --upgrade jupyter
   - pip install nbconvert
 
