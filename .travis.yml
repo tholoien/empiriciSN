@@ -14,7 +14,10 @@ install:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
+  # Get some basic packages
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION numpy scipy matplotlib
   # OK, we now have conda python!
+  # Do the requirements next - some redundancy?
   - pip install -r requirements.txt
   - pip install git+git://github.com/tholoien/XDGMM.git#egg=xdgmm
   - python setup.py install
