@@ -5,7 +5,9 @@ install:
   - sudo apt-get update
   - pip install -r requirements.txt
   - pip install git+git://github.com/tholoien/XDGMM.git#egg=xdgmm
+  - pip install nbconvert
   - python setup.py install
 
 script:
   - nosetests
+  - jupyter nbconvert --ExecutePreprocessor.timeout=600 --to notebook --execute Notebooks/Demo.ipynb

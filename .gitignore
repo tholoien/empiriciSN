@@ -4,3 +4,4 @@ dist
 *.pyc
 .ipynb_checkpoints
 *DS_Store*
+*.nbconvert.ipynb
