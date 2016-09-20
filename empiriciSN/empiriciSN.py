@@ -9,7 +9,8 @@ from xdgmm import XDGMM
 
 class Empiricist(object):
     """
-    Worker object that can fit supernova and host galaxy parameters given noisy inputs using an XDGMM model, and then predict new
+    Worker object that can fit supernova and host galaxy parameters 
+    given noisy inputs using an XDGMM model, and then predict new
     supernovae based on this model and a set of new host galaxies.
 
     Parameters
@@ -89,7 +90,8 @@ class Empiricist(object):
         be used (typical BIC-optimized numbers of components for ~100s
         of training datapoints are 6 or 7).
 
-        The fit will be saved in the file with name defined by the filename variable.
+        The fit will be saved in the file with name defined by the 
+        filename variable.
         """
         self.XDGMM.n_components = n_components
         self.XDGMM = self.XDGMM.fit(X, Xerr)
@@ -138,7 +140,8 @@ class Empiricist(object):
 
         Notes
         -----
-        Model parameters are stored in the self.XDGMM model object. The model filename is stored self.model_file.
+        Model parameters are stored in the self.XDGMM model object. 
+        The model filename is stored self.model_file.
         """
         self.XDGMM.read_model(filename)
         self.model_file = filename
@@ -249,6 +252,83 @@ class Empiricist(object):
         sample = cond_XDGMM.sample()
         logR = sample[0][R_cond_idx]
         return logR
+
+    def get_local_SB(self, SB_params, R ):
+        """
+        Uses magnitudes, a surface brightness (SB) profile, and
+        a SN location to fit local surface brightnesses at the location
+        of the SN.
+
+        Parameters
+        ----------
+        SB_params: array_like, shape = (21,)
+            Array of parameters needed for the SB fit. First entry 
+            should be a sersic index of 1 or 4, indicating whether to
+            use an exponential or de Vaucouleurs profile. Following this
+            should be sets of 
+            (magnitude, mag_unc, effective radius, rad_unc) data for
+            each of the 5 ugriz filters, giving a total array length of
+            21. These data are assumed to be known by the user.
+        R: float
+            Separation from host nucleus in units of log(R/Re).
+            It is assumed that the Re used here is the r-band Re, as is
+            output by the get_logR function.
+
+        Returns
+        -------
+        SBs: array_list, shape = (5,)
+            Local surface brightness at the location of the SN for each
+            of the 5 ugriz filters. Units = mag/arcsec^2
+        SB_errs: array_like, shape = (5,)
+            Uncertainties on the local surface brightnesses.
+        """
+        if SB_params[0]!=1 and SB_params[0]!=4:
+            raise ValueError("Sersic index must be 1 or 4")
+            
+
+        sep = (10**R) * SB_params[11] # separation in arcsec
+
+        SBs = np.array([])
+        SB_errs = np.array([])
+
+        for j in range(5):
+            halfmag = SB_params[j*4+1] + 0.75257
+            magerr = SB_params[j*4+2]
+            Re = SB_params[j*4+3]
+            Re_err = SB_params[j*4+4]
+            r = sep/Re
+
+            Ie = halfmag + 2.5 * np.log10(np.pi*Re**2)
+            Re2_unc = 2 * Re * Re_err * np.pi
+            log_unc = 2.5 * Re2_unc/(np.log10(np.pi*Re**2) * np.log(10))
+            Ie_unc = np.sqrt(magerr**2 + log_unc**2)
+
+            if SB_params[0] == 1:
+                Io = Ie-1.824
+                Io_unc = Ie_unc
+                sb = Io*np.exp(-1.68*(r))
+                exp_unc = np.exp(-1.68*(r))*1.68*sep*Re_err/(Re**2)
+                sb_unc = sb * np.sqrt((Io_unc/Io)**2 +
+                                      (exp_unc/np.exp(-1.68*(r)))**2)
+                if np.isnan(sb_unc): sb_unc = 0.0
+                if sb_unc < 0: sb_unc = sb_unc*-1.0
+                SBs = np.append(SBs,sb)
+                SB_errs = np.append(SB_errs,sb_unc)
+
+            if SB_params[0] == 4:
+                Io = Ie-8.328
+                Io_unc = Ie_unc
+                sb = Io*np.exp(-7.67*((r)**0.25))
+                exp_unc = np.exp(-7.67*((r)**0.25))*7.67*sep \
+                          *Re_err/(4*Re**(1.25))
+                sb_unc = sb*np.sqrt((Io_unc/Io)**2+(exp_unc \
+                       /np.exp(-7.67*((r)**0.25))))
+                if np.isnan(sb_unc): sb_unc = 0.0
+                if sb_unc < 0: sb_unc = sb_unc*-1.0
+                SBs = np.append(SBs,sb)
+                SB_errs = np.append(SB_errs,sb_unc)
+
+        return SBs, SB_errs
 
     def set_fit_method(self, fit_method):
         """

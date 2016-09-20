@@ -4,7 +4,7 @@ import empiriciSN
 
 setup(
     name="empiriciSN",
-    version='1.0.0',
+    version='1.0.1',
     author="Tom Holoien",
     author_email="tholoien@gmail.com",
     url="https://github.com/tholoien/empiriciSN",

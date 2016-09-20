@@ -1,6 +1,8 @@
 # XDGMM Model
 # n_components  n_iter  tol  method   random_state
 7,100,1e-05,astroML,None
+# labels
+No labels
 # weights
 0.385369505656,0.0262998655559,0.155557661831,0.0603353057865,0.00992307639751,0.201968165102,0.160546419672
 # means

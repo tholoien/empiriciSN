@@ -67,6 +67,18 @@ class EmpiricistTestCase(unittest.TestCase):
         logR = self.empiricist.get_logR(indeces,4,X)
 
         self.assertNotEqual(logR,0.0)
+    
+    def test_get_local_SB(self):
+        sb_params = np.array([1,21.402,0.22,0.8593072,0.7847312,20.426,
+                              0.046,0.9257621,0.1127986,19.895,0.03,
+                              0.6392374,0.08155595,19.619,0.034,
+                              0.7765083,0.08438506,19.311,0.087,
+                              1.039772,0.3918832])
+        logR = np.log10(1.76/0.6392374)
+        
+        SB,SBerr = self.empiricist.get_local_SB(sb_params,logR)
+        
+        self.assertNotEqual(0,len(SB))
 
 if __name__ == '__main__':
     unittest.main()
