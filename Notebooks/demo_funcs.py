@@ -151,10 +151,12 @@ def get_demo_data(flist):
     iz = imag-zmag
     iz_err = np.sqrt(imag_err**2+zmag_err**2)
 
-    X = np.vstack([x0, x1, c, z, logr, ug, ur, ui, uz, gr, gi, gz, ri, rz, iz, SB_u,
-                 SB_g, SB_r, SB_i, SB_z]).T
+    X = np.vstack([x0, x1, c, z, logr, ug, ur, ui, uz, gr, gi, gz, ri, 
+                   rz, iz, SB_u, SB_g, SB_r, SB_i, SB_z]).T
+    #X = np.vstack([x0, x1, c, z, logr, ug, ur, ui, uz, gr, gi, gz, ri, rz, iz]).T
     Xerr = np.zeros(X.shape + X.shape[-1:])
     diag = np.arange(X.shape[-1])
+    
     Xerr[:,  diag,  diag] = np.vstack([x0_err**2, x1_err**2, c_err**2,
                                      z_err**2, logr_err**2, ug_err**2,
                                      ur_err**2, ui_err**2, uz_err**2,
@@ -163,6 +165,13 @@ def get_demo_data(flist):
                                      SB_u_err**2, SB_g_err**2,
                                      SB_r_err**2, SB_i_err**2,
                                      SB_z_err**2]).T
+    '''
+    Xerr[:,  diag,  diag] = np.vstack([x0_err**2, x1_err**2, c_err**2,
+                                     z_err**2, logr_err**2, ug_err**2,
+                                     ur_err**2, ui_err**2, uz_err**2,
+                                     gr_err**2, gi_err**2, gz_err**2,
+                                     ri_err**2, rz_err**2, iz_err**2]).T
+    '''
     rad_params = np.vstack([profile, umag, umag_err, urad, urad_err, gmag,
                             gmag_err, grad, grad_err, rmag, rmag_err, rrad,
                             rrad_err, imag, imag_err, irad, irad_err, zmag,
