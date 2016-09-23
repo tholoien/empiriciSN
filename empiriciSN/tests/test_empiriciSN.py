@@ -14,17 +14,17 @@ class EmpiricistTestCase(unittest.TestCase):
         Set up each test with a new empiriciSN object with existing model.
         """
         url = 'https://raw.githubusercontent.com/tholoien/empiriciSN/' \
-            + 'master/models/empiriciSN_model_7comp.fit'
-        path = './empiriciSN_model_7comp.fit'
+            + 'master/models/empiriciSN_model.fit'
+        path = './empiriciSN_model.fit'
         urllib.urlretrieve(url, path)
-        self.empiricist = empiriciSN.Empiricist(model_file = 'empiriciSN_model_7comp.fit')
+        self.empiricist = empiriciSN.Empiricist(model_file = 'empiriciSN_model.fit')
         self.files = []
 
     def tearDown(self):
         """
         Clean up files saved by tests
         """
-        os.remove('empiriciSN_model_7comp.fit')
+        os.remove('empiriciSN_model.fit')
         if os.path.isfile('snls_master.csv'):
             os.remove('snls_master.csv')
         if os.path.isfile('empiriciSN_model.fit'):
@@ -32,10 +32,10 @@ class EmpiricistTestCase(unittest.TestCase):
 
     def test_get_SN(self):
         url = 'https://raw.githubusercontent.com/tholoien/empiriciSN/' \
-            +'master/models/empiriciSN_model_7comp.fit'
-        path = './empiriciSN_model_7comp.fit'
+            +'master/models/empiriciSN_model.fit'
+        path = './empiriciSN_model.fit'
         urllib.urlretrieve(url, path)
-        self.empiricist.read_model('empiriciSN_model_7comp.fit')
+        self.empiricist.read_model('empiriciSN_model.fit')
         sample = self.empiricist.XDGMM.sample()[0]
         testdat = np.append(np.array([np.nan,np.nan,np.nan]),sample[3:])
         sn = self.empiricist.get_SN(testdat)
@@ -51,14 +51,14 @@ class EmpiricistTestCase(unittest.TestCase):
 
         self.empiricist.fit_from_files(['snls_master.csv'],n_components=1)
 
-        self.assertNotEqual(self.empiricist.model_file,this_model_file)
+        self.assertEqual(self.empiricist.model_file,this_model_file)
 
     def test_get_logR(self):
         url = 'https://raw.githubusercontent.com/tholoien/empiriciSN/' \
-            +'master/models/empiriciSN_model_7comp.fit'
-        path = './empiriciSN_model_7comp.fit'
+            +'master/models/empiriciSN_model.fit'
+        path = './empiriciSN_model.fit'
         urllib.urlretrieve(url, path)
-        self.empiricist.read_model('empiriciSN_model_7comp.fit')
+        self.empiricist.read_model('empiriciSN_model.fit')
         sample = self.empiricist.XDGMM.sample()[0]
 
         indeces = np.array([3,5,6,7,8,9,10,11,12,13,14])
