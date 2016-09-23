@@ -68,7 +68,7 @@ class Empiricist(object):
         return np.atleast_2d(cond_XDGMM.sample(n_SN))
 
     def fit_model(self, X, Xerr, filename='empiriciSN_model.fit',
-                  n_components=7):
+                  n_components=6):
         """
         Fits the XD model to data.
 
@@ -82,7 +82,7 @@ class Empiricist(object):
             Filename for model fit to be saved to (default =
             'empiriciSN_model.fit').
         n_components: float (optional)
-            Number of Gaussian components to use (default = 7)
+            Number of Gaussian components to use (default = 6)
 
         Notes
         -----
@@ -375,10 +375,6 @@ class Empiricist(object):
             locations of the SN in each filter.
         Xerr: array_like, shape = (n_samples, n_features, n_features)
             Error on output data.
-        profiles: array_list, shape = (n_samples,)
-            Surface brightness profile ('Exp' for exponential, 'deV' for
-            de Vaucouleurs) of each host in the sample. Used for radius
-            fitting and local surface brightness calculation.
 
         Notes
         -----
