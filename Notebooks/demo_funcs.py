@@ -118,7 +118,8 @@ def get_demo_data(flist):
             SB_z_err = np.append(SB_z_err, float(line[57]))
 
             # Radius params
-            profile = np.append(profile, line[29])
+            if line[29]=='Exp': profile=np.append(profile,1)
+            elif line[29]=='deV': profile=np.append(profile,4)
             urad = np.append(urad, float(line[30]))
             urad_err = np.append(urad_err, float(line[31]))
             grad = np.append(grad, float(line[36]))
