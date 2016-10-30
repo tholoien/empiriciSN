@@ -3,6 +3,7 @@
 empiriciSN is a software module for generating realistic supernova parameters given photometric observations of a potential host galaxy, based entirely on empirical correlations measured from supernova datasets. This code is intended to be used to improve supernova simulation for DES and LSST. It is extendable such that additional datasets may be added in the future to improve the fitting algorithm or so that additional light curve parameters or supernova types may be fit.
 
 [![Build Status](https://travis-ci.org/tholoien/empiriciSN.svg?branch=master)](https://travis-ci.org/tholoien/empiriciSN)
+[![DOI](https://zenodo.org/badge/61058789.svg)](https://zenodo.org/badge/latestdoi/61058789)
 
 ### SN Parameters
 The code currently supports the generation of SALT2 parameters (stretch, color, and magnitude) for Type Ia supernovae.
