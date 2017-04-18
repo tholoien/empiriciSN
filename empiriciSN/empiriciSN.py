@@ -238,12 +238,12 @@ class Empiricist(object):
         for i in range(n_features):
             if i in cond_indices:
                 cond_data = np.append(cond_data,X[j])
-                if Xerr is not None: np.append(cond_err, Xerr[j])
+                if Xerr is not None: cond_err = np.append(cond_err, Xerr[j])
                 j += 1
                 if i < R_index: R_cond_idx -= 1
             else:
                 cond_data = np.append(cond_data,np.nan)
-                if Xerr is not None: np.append(cond_err, 0.0)
+                if Xerr is not None: cond_err = np.append(cond_err, 0.0)
 
         if Xerr is not None:
             cond_XDGMM = self.XDGMM.condition(cond_data, cond_err)

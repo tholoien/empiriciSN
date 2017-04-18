@@ -5,3 +5,4 @@ astroML_addons
 astroML
 scipy
 corner
+pandas
