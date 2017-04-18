@@ -42,8 +42,8 @@ class EmpiricistTestCase(unittest.TestCase):
         self.assertEqual(sn.shape,(1,3))
 
     def test_fit(self):
-        url = 'https://dl.dropboxusercontent.com/u/5900205/' \
-            +'empiriciSN_data/snls_master.csv'
+        url = 'https://raw.githubusercontent.com/tholoien/empiriciSN/' \
+            +'master/Notebooks/data_files/snls_master.csv'
         path = './snls_master.csv'
         urllib.urlretrieve(url, path)
 
